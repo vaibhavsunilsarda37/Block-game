@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenging Block Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            grid-gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .block {
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            border: 1px solid #2980b9;
+            cursor: pointer;
+            animation: dropBlock 0.5s ease;
+        }
+
+        @keyframes dropBlock {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .special-block {
+            background-color: #e74c3c;
+        }
+
+        #score {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #level {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #timer {
+            font-size: 20px;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: <span id="score-value">0</span></div>
+    <div id="level">Level: <span id="level-value">1</span></div>
+    <div id="timer">Time: <span id="timer-value">60</span> seconds</div>
+    <div id="game-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameContainer = document.getElementById('game-container');
+            const scoreElement = document.getElementById('score-value');
+            const levelElement = document.getElementById('level-value');
+            const timerElement = document.getElementById('timer-value');
+            let score = 0;
+            let level = 1;
+            let timer = 60;
+
+            // Function to create random number between min and max (inclusive)
+            function getRandomNumber(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            // Function to handle block click event
+            function handleBlockClick(block) {
+                // Increment score on click (but reduce score for challenge)
+                score += level; // Gain more points with higher levels
+                scoreElement.textContent = score;
+
+                // Check for special block
+                if (block.classList.contains('special-block')) {
+                    score += 5 * level; // Extra points for special block, adjusted for level
+                }
+
+                // Reset special block styles
+                document.querySelectorAll('.special-block').forEach(specialBlock => {
+                    specialBlock.classList.remove('special-block');
+                });
+
+                // Randomly make a block special
+                if (getRandomNumber(1, 5) === 1) {
+                    const randomBlock = gameContainer.children[getRandomNumber(0, 24)];
+                    randomBlock.classList.add('special-block');
+                }
+
+                // Drop the clicked block
+                block.style.animation = 'none';
+                void block.offsetWidth; // Trigger reflow
+                block.style.animation = null;
+                block.style.animation = 'dropBlock 0.5s ease';
+            }
+
+            // Function to update timer and check for game over
+            function updateTimer() {
+                timer--;
+                timerElement.textContent = timer + ' seconds';
+
+                if (timer === 0) {
+                    nextLevel();
+                } else {
+                    setTimeout(updateTimer, 1000);
+                }
+            }
+
+            // Function to advance to the next level
+            function nextLevel() {
+                level++;
+                levelElement.textContent = level;
+                timer = 60 + (level * 10); // Increase time for each level
+                updateTimer();
+            }
+
+            // Create 25 blocks in the game container
+            for (let i = 0; i < 25; i++) {
+                const block = document.createElement('div');
+                block.classList.add('block');
+                block.addEventListener('click', () => handleBlockClick(block));
+                gameContainer.appendChild(block);
+            }
+
+            // Create one moving block
+            const movingBlock = document.createElement('div');
+            movingBlock.classList.add('block', 'special-block');
+            movingBlock.addEventListener('click', () => handleBlockClick(movingBlock));
+            gameContainer.appendChild(movingBlock);
+
+            // Start the timer
+            updateTimer();
+        });
+    </script>
+</body>
+</html>
